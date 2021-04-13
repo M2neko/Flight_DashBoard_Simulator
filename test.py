@@ -4,7 +4,6 @@ import sys
 angle = 0
 WIDTH = 200
 HEIGHT = 200
-INPUT = 10
 
 pygame.init()
 window = pygame.display.set_mode((WIDTH + 100, HEIGHT))
@@ -24,20 +23,25 @@ class InputBox:
         self.color = COLOR_INACTIVE
         self.text = text
         self.txt_surface = FONT.render(text, True, self.color)
+        self.INPUT = 0
         self.active = False
 
     def handle_event(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
                 self.active = not self.active
             else:
                 self.active = False
             self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
-        if event.type == pg.KEYDOWN:
+        if event.type == pygame.KEYDOWN:
             if self.active:
-                if event.key == pg.K_RETURN:
+                if event.key == pygame.K_RETURN:
+                    
+                    # Update INPUT
+                    self.INPUT = float(self.text)
+
                     self.text = ''
-                elif event.key == pg.K_BACKSPACE:
+                elif event.key == pygame.K_BACKSPACE:
                     self.text = self.text[:-1]
                 else:
                     self.text += event.unicode
@@ -45,11 +49,11 @@ class InputBox:
                 self.txt_surface = FONT.render(self.text, True, self.color)
 
     def update(self):
-        width = max(200, self.txt_surface.get_width()+10)
+        width = max(35, self.txt_surface.get_width() + 10)
         self.rect.w = width
 
     def draw(self, screen):
-        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
+        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
         pygame.draw.rect(screen, self.color, self.rect, 2)
 
 
@@ -69,18 +73,21 @@ while flag:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        input_box.handle_event(event)
             
     newpp = pygame.transform.rotate(pp, angle)
     
     newRect = newpp.get_rect(center = ppRect.center)
-    angle = -INPUT * 360 / 12
+    angle = -input_box.INPUT * 360 / 12
     angle %= 360
 
     window.fill((111,111,111))	
     img = pygame.image.load("fou.png")
     window.blit(img, (0, 0))
     window.blit(newpp, newRect)
-
+    
+    input_box.update()
     input_box.draw(window)
+    
     pygame.display.flip()
     pygame.display.update()
