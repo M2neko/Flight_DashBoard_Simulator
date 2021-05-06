@@ -1,7 +1,7 @@
 import pygame
 import sys
 
-move_speed = 0.5
+move_speed = 1.0
 now_angle = 0
 set_angle = 0
 WIDTH = 200
@@ -121,12 +121,23 @@ while flag:
 
     newRect = newpp.get_rect(center = ppRect.center)
 
-    if input_box.INPUT >= 0 and input_box.INPUT <= 2000:
+    if input_box.INPUT >= 0 and input_box.INPUT <= 500:
         if input_button.text == 'UP':
-            set_angle = -input_box.INPUT / 100.0 * 360 / 45.0
+            set_angle = -input_box.INPUT / 100.0 * 360 / 50.0
         if input_button.text == 'DN':
-            set_angle = input_box.INPUT / 100.0 * 360 / 45.0    
-
+            set_angle = input_box.INPUT / 100.0 * 360 / 50.0
+            
+    elif input_box.INPUT >= 0 and input_box.INPUT <= 1000:
+        if input_button.text == 'UP':
+            set_angle = - (36 + (input_box.INPUT - 500) / 100.0 * 360 / 42.0)
+        if input_button.text == 'DN':
+            set_angle = 36 + (input_box.INPUT - 500) / 100.0 * 360 / 42.0
+            
+    elif input_box.INPUT >= 0 and input_box.INPUT <= 2000:
+        if input_button.text == 'UP':
+            set_angle = - (78.86 + (input_box.INPUT - 1000) / 100.0 * 360 / 38.0)
+        if input_button.text == 'DN':
+            set_angle = 78.86 + (input_box.INPUT - 1000) / 100.0 * 360 / 38.0
 
     window.fill((111,111,111))
     
