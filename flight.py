@@ -4,6 +4,7 @@ import sys
 # SPEED SET
 speed_now_angle = 0
 speed_set_angle = 0
+speed_set_speed = 0
 
 # ARTIF SET
 artif_now_angle = 0
@@ -18,6 +19,8 @@ alti_now_meter = 0
 alti_hun_angle = 0
 alti_tho_angle = 0
 alti_tent_angle = 0
+
+alti_mult = 3
 
 # SLIP SET
 slip_now_angle = 0
@@ -181,7 +184,7 @@ class AltiInputBox:
         self.color = COLOR_INACTIVE
         self.text = text
         self.txt_surface = FONT.render(text, True, self.color)
-        self.INPUT = 0
+        self.INPUT = 0.0
         self.active = False
 
     def handle_event(self, event):
@@ -197,7 +200,6 @@ class AltiInputBox:
                     
                     # Update INPUT
                     self.INPUT = float(self.text)
-
                     self.text = ''
                 elif event.key == pygame.K_BACKSPACE:
                     self.text = self.text[:-1]
@@ -326,6 +328,14 @@ class HeadInputButton:
             self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
             self.txt_surface = FONT.render(self.text, True, self.color)
 
+    def change_state(self, state):
+        if state == 'L':
+            self.text = 'L'
+            self.active = False
+        if state == 'R':
+            self.text = 'R'
+            self.active = True
+        self.txt_surface = FONT.render(self.text, True, self.color)
 
     def draw(self, screen):
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
@@ -392,7 +402,15 @@ class UpDownInputButton:
                 self.active = False
             self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
             self.txt_surface = FONT.render(self.text, True, self.color)
-
+            
+    def change_state(self):
+        self.active = not self.active
+        if self.text == 'UP':
+            self.text = 'DN'
+        else:
+            self.text = 'UP'
+        self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
+        self.txt_surface = FONT.render(self.text, True, self.color)
 
     def draw(self, screen):
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
@@ -461,6 +479,15 @@ tencenter = tenRect.center
 updown_input_box = UpDownInputBox(WIDTH + 20 + 4 * INDEX + 2 * WIDTH, 90 + 2 * INDEX + HEIGHT, BOX, BOX)
 updown_input_button = UpDownInputButton(WIDTH + 15 + 4 * INDEX + 2 * WIDTH, 45 + 2 * INDEX + HEIGHT, BOX, BOX)
 
+# ----------------START----------------
+
+speed_set_speed = 100
+
+alti_input_box.INPUT = 2000
+
+
+# -------------------------------------
+
 flag = True
 while flag:
     for event in pygame.event.get():
@@ -486,11 +513,11 @@ while flag:
 
     # SPEED UPDATE
     if speed_now_angle > speed_set_angle:
-        speed_now_angle -= 2
+        speed_now_angle -= 1
         if speed_now_angle < speed_set_angle:
             speed_now_angle = speed_set_angle
     if speed_now_angle < speed_set_angle:
-        speed_now_angle += 2
+        speed_now_angle += 1
         if speed_now_angle > speed_set_angle:
             speed_now_angle = speed_set_angle
     
@@ -498,27 +525,64 @@ while flag:
 
     pointRect = sixPP.get_rect(center = sixcenter + pygame.math.Vector2(INDEX, INDEX))
 
-    if speed_input_box.INPUT >= 40 and speed_input_box.INPUT <= 160:
-        speed_set_angle = - ((speed_input_box.INPUT - 20) * 360 / 190)
-    elif speed_input_box.INPUT > 160 and speed_input_box.INPUT <= 200:
-        speed_temp_input = (speed_input_box.INPUT - 160) / 40 * 25 + 160
+    if speed_input_box.INPUT >= 40 and speed_input_box.INPUT <= 200:
+        speed_set_speed = speed_input_box.INPUT
+    
+
+    if speed_set_speed >= 40 and speed_set_speed <= 160:
+        speed_set_angle = - ((speed_set_speed - 20) * 360 / 190)
+    elif speed_set_speed > 160 and speed_set_speed <= 200:
+        speed_temp_input = (speed_set_speed - 160) / 40 * 25 + 160
         speed_set_angle = - ((speed_temp_input - 20) * 360 / 190)
 
     # ARTIF UPDATE
     if artif_now_angle > artif_set_angle:
-        artif_now_angle -= 2
+        # ARTIF RIGHT
+        slip_input_box.INPUT = 'R'
+        speed_set_speed -= 1
+
+        head_input_button.change_state('R')
+        head_input_box.rotation += 1
+        #-----------
+        artif_now_angle -= 1
         if artif_now_angle < artif_set_angle:
             artif_now_angle = artif_set_angle
     if artif_now_angle < artif_set_angle:
-        artif_now_angle += 2
+        # ARTIF LEFT
+        slip_input_box.INPUT = 'L'
+        speed_set_speed -= 1
+
+        head_input_button.change_state('L')
+        head_input_box.rotation -= 1
+        #-----------
+        artif_now_angle += 1
         if artif_now_angle > artif_set_angle:
             artif_now_angle = artif_set_angle
 
     if artif_now_height > artif_set_height:
+        # ARTIF DOWN
+        alti_input_box.INPUT -= 10 * alti_mult
+        speed_set_speed += 1
+        if updown_input_box.INPUT == 0:
+            if updown_input_button.text == 'UP':
+                updown_input_button.change_state()
+        if updown_input_button.text == 'DN':
+            updown_input_box.INPUT += 7.5
+        #-----------
         artif_now_height -= 0.5
         if artif_now_height < artif_set_height:
             artif_now_height = artif_set_height
+            
     if artif_now_height < artif_set_height:
+        # ARTIF UP
+        alti_input_box.INPUT += 10 * alti_mult
+        speed_set_speed -= 1
+        if updown_input_box.INPUT == 0:
+            if updown_input_button.text == 'DN':
+                updown_input_button.change_state()
+        if updown_input_button.text == 'UP':
+            updown_input_box.INPUT += 7.5
+        #-----------
         artif_now_height += 0.5
         if artif_now_height > artif_set_height:
             artif_now_height = artif_set_height
@@ -548,17 +612,17 @@ while flag:
 
     # ALTI UPDATE
     if alti_now_meter < alti_set_meter:
-        alti_hun_angle -= 36
-        alti_tho_angle -= 3.6
-        alti_tent_angle -= 0.36
-        alti_now_meter += 1
+        alti_hun_angle -= 3.6 * alti_mult
+        alti_tho_angle -= 0.36 * alti_mult
+        alti_tent_angle -= 0.036 * alti_mult
+        alti_now_meter += 0.1 * alti_mult
         if alti_now_meter > alti_set_meter:
             alti_now_meter = alti_set_meter
     if alti_now_meter > alti_set_meter:
-        alti_hun_angle += 36
-        alti_tho_angle += 3.6
-        alti_tent_angle += 0.36
-        alti_now_meter -= 1
+        alti_hun_angle += 3.6 * alti_mult
+        alti_tho_angle += 0.36 * alti_mult
+        alti_tent_angle += 0.036 * alti_mult
+        alti_now_meter -= 0.1 * alti_mult
         if alti_now_meter < alti_set_meter:
             alti_now_meter = alti_set_meter
         
@@ -589,7 +653,6 @@ while flag:
     ninPP = pygame.transform.rotate(nin, slip_now_angle)
     
     ninRect = ninPP.get_rect(center = nincenter + pygame.math.Vector2(INDEX, 2 * INDEX + HEIGHT))
-
 
     if slip_input_box.INPUT == 'L' :
         slip_set_angle = 20
