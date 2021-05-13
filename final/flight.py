@@ -53,6 +53,9 @@ INDEX = 100
 
 BOX = 32
 
+FirstSet = False
+FirstSetDone = False
+
 pygame.init()
 window = pygame.display.set_mode((MAX_WIDTH, MAX_HEIGHT))
 pygame.display.set_caption("Cessna 172")
@@ -485,6 +488,9 @@ speed_set_speed = 100
 
 alti_input_box.INPUT = 2000
 
+artif_input_box_hei.INPUT = 10
+
+updown_input_box.INPUT = 500
 
 # -------------------------------------
 
@@ -511,13 +517,25 @@ while flag:
         updown_input_box.handle_event(event)
         updown_input_button.handle_event(event)
 
+    # FIRST UPDATE
+    if not FirstSetDone:
+        if not FirstSet:
+            if alti_now_meter >= 19:
+                artif_input_box_hei.INPUT = 0
+                updown_input_box.INPUT = 0
+                FirstSet = True
+        else:
+            if artif_now_height == 0 and updown_now_angle == 0:
+                FirstSetDone = True
+        
+    
     # SPEED UPDATE
     if speed_now_angle > speed_set_angle:
-        speed_now_angle -= 1
+        speed_now_angle -= 2
         if speed_now_angle < speed_set_angle:
             speed_now_angle = speed_set_angle
     if speed_now_angle < speed_set_angle:
-        speed_now_angle += 1
+        speed_now_angle += 2
         if speed_now_angle > speed_set_angle:
             speed_now_angle = speed_set_angle
     
@@ -538,8 +556,9 @@ while flag:
     # ARTIF UPDATE
     if artif_now_angle > artif_set_angle:
         # ARTIF RIGHT
-        slip_input_box.INPUT = 'R'
-        speed_set_speed -= 1
+        slip_input_box.INPUT = 'L'
+        if artif_input_box_rot.INPUT == 0:
+            slip_input_box.INPUT = 'X'
 
         head_input_button.change_state('R')
         head_input_box.rotation += 1
@@ -549,8 +568,9 @@ while flag:
             artif_now_angle = artif_set_angle
     if artif_now_angle < artif_set_angle:
         # ARTIF LEFT
-        slip_input_box.INPUT = 'L'
-        speed_set_speed -= 1
+        slip_input_box.INPUT = 'R'
+        if artif_input_box_rot.INPUT == 0:
+            slip_input_box.INPUT = 'X'
 
         head_input_button.change_state('L')
         head_input_box.rotation -= 1
@@ -561,29 +581,49 @@ while flag:
 
     if artif_now_height > artif_set_height:
         # ARTIF DOWN
-        alti_input_box.INPUT -= 10 * alti_mult
-        speed_set_speed += 1
-        if updown_input_box.INPUT == 0:
+        if FirstSetDone:
+            alti_input_box.INPUT -= 10 * alti_mult
+            speed_set_speed *= 1.01
+
+            ## UPDOWN
+            if updown_input_box.INPUT == 0:
+                if updown_input_button.text == 'UP':
+                    updown_input_button.change_state()
             if updown_input_button.text == 'UP':
-                updown_input_button.change_state()
-        if updown_input_button.text == 'DN':
-            updown_input_box.INPUT += 7.5
+                if updown_input_box.INPUT < 7.5:
+                    updown_input_box.INPUT = 7.5 - updown_input_box.INPUT
+                    updown_input_button.change_state()
+                else:
+                    updown_input_box.INPUT -= 7.5
+            else:
+                updown_input_box.INPUT += 7.5
+                
         #-----------
-        artif_now_height -= 0.5
+        artif_now_height -= 1.2
         if artif_now_height < artif_set_height:
             artif_now_height = artif_set_height
             
     if artif_now_height < artif_set_height:
         # ARTIF UP
-        alti_input_box.INPUT += 10 * alti_mult
-        speed_set_speed -= 1
-        if updown_input_box.INPUT == 0:
+        if FirstSetDone:
+            alti_input_box.INPUT += 10 * alti_mult
+            speed_set_speed *= 0.99
+    
+            ## UPDOWN
+            if updown_input_box.INPUT == 0:
+                if updown_input_button.text == 'DN':
+                    updown_input_button.change_state()
             if updown_input_button.text == 'DN':
-                updown_input_button.change_state()
-        if updown_input_button.text == 'UP':
-            updown_input_box.INPUT += 7.5
+                if updown_input_box.INPUT < 7.5:
+                    updown_input_box.INPUT = 7.5 - updown_input_box.INPUT
+                    updown_input_button.change_state()
+                else:
+                    updown_input_box.INPUT -= 7.5
+            else:
+                updown_input_box.INPUT += 7.5
+                
         #-----------
-        artif_now_height += 0.5
+        artif_now_height += 1.2
         if artif_now_height > artif_set_height:
             artif_now_height = artif_set_height
     
@@ -598,7 +638,7 @@ while flag:
 
     if artif_input_box_rot.letRot:
         if artif_input_box_rot.INPUT >= 0 and artif_input_box_rot.INPUT <= 90:
-            if artif_input_button.text == 'L':
+            if artif_input_button.text == 'R':
                 artif_set_angle = artif_input_box_rot.INPUT
                 artif_input_box_rot.letRot = False
             else:
