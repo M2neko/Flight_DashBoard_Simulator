@@ -556,24 +556,30 @@ while flag:
     # ARTIF UPDATE
     if artif_now_angle > artif_set_angle:
         # ARTIF RIGHT
-        slip_input_box.INPUT = 'L'
+        if artif_input_button.text == 'L':
+            slip_input_box.INPUT = 'L'
+        if artif_input_button.text == 'R':
+            slip_input_box.INPUT = 'R'
         if artif_input_box_rot.INPUT == 0:
             slip_input_box.INPUT = 'X'
 
-        head_input_button.change_state('R')
-        head_input_box.rotation += 1
+        head_input_button.change_state('L')
+        head_input_box.rotation -= 1
         #-----------
         artif_now_angle -= 1
         if artif_now_angle < artif_set_angle:
             artif_now_angle = artif_set_angle
     if artif_now_angle < artif_set_angle:
         # ARTIF LEFT
-        slip_input_box.INPUT = 'R'
+        if artif_input_button.text == 'L':
+            slip_input_box.INPUT = 'L'
+        if artif_input_button.text == 'R':
+            slip_input_box.INPUT = 'R'
         if artif_input_box_rot.INPUT == 0:
             slip_input_box.INPUT = 'X'
 
-        head_input_button.change_state('L')
-        head_input_box.rotation -= 1
+        head_input_button.change_state('R')
+        head_input_box.rotation += 1
         #-----------
         artif_now_angle += 1
         if artif_now_angle > artif_set_angle:
